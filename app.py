@@ -16,11 +16,12 @@ value_dictionary = {
     'Ace': 11
 }
 
-suits = ['Club', 'Jack', 'Spade', 'Hearts']
+suits = ('Club', 'Jack', 'Spade', 'Hearts')
 
-ranks = ['Ace', 'Two', 'Three', 'Four', 'Five', 'Six',
-         'Seven', 'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King']
+ranks = ('Ace', 'Two', 'Three', 'Four', 'Five', 'Six',
+         'Seven', 'Eight', 'Nine', 'Ten', 'Jack', 'Queen', 'King')
 
+playing = True
 
 class Card:
     def __init__(self, suit, rank):
@@ -95,3 +96,114 @@ def take_bet(chips):
                 print("Sorry, you do not have enough chips! You have {} chips left!".format(chips.total))
             else: 
                 break
+
+def hit(deck, hand):
+    single_card = deck.deal()
+    hand.add_card(single_card)
+    hand.adjust_ace()
+
+def hit_or_stand(deck, hand):
+    global playing
+
+    while True:
+        x = input("Hit or Stand? Enter h or s: ")
+
+        if x[0].lower() == 'h':
+            hit(deck, hand)
+        elif x[0].lower() == 's':
+            print("Player Stands!")
+            playing = False
+        else:
+            print("Sorry! I did not understand that! Please enter only 'h' or 's': ")
+            continue
+        break
+
+def show_some(player,dealer):
+    print("\nDealer's Hand:")
+    print(" ")
+    print('',dealer.cards[1])  
+    print("\nPlayer's Hand:", *player.cards, sep='\n ')
+    
+def show_all(player,dealer):
+    print("\nDealer's Hand:", *dealer.cards, sep='\n ')
+    print("Dealer's Hand =",dealer.value)
+    print("\nPlayer's Hand:", *player.cards, sep='\n ')
+    print("Player's Hand =",player.value)
+
+def player_busts(player, dealer, chips):
+    print("BUST PLAYER!")
+    chips.lose_bet()
+
+def player_wins(player, dealer, chips):
+    print("PLAYER WINS!")
+    chips.win_bet()
+
+def dealer_busts(player, dealer, chips):
+    print("DEALERS BUSTS! PLAYER WINS!")
+    chips.win_bet()
+
+def dealer_wins(player, dealer, chips):
+    print("DEALER WINS, PLAYER LOSES!")
+    chips.lose_bet()
+
+def push(player, dealer):
+    print("Dealer and Player ties! PUSH!")
+
+# THE GAME BEGINS HERE!
+
+while True:
+    print("Welcome to BlackJack!")
+
+    deck = Deck()
+    deck.shuffle()
+
+    player_hand = Hand()
+    player_hand.add_card(deck.deal())
+    player_hand.add_card(deck.deal())
+
+    dealer_hand = Hand()
+    dealer_hand.add_card(deck.deal())
+    dealer_hand.add_card(deck.deal())
+
+    player_chips = Chip()
+
+    take_bet(player_chips)
+
+    show_some(player_hand, dealer_hand)
+
+    while playing:
+
+        hit_or_stand(deck, player_hand)
+
+        show_some(player_hand, dealer_hand)
+
+        if player_hand.value > 21:
+            player_busts(player_hand, dealer_hand, player_chips)
+            break
+    
+    if player_hand.value <= 21:
+
+        while dealer_hand.value <= 17:
+            hit(deck, dealer_hand)
+        
+        show_all(player_hand, dealer_hand)
+
+        if dealer_hand.value > 21:
+            dealer_busts(player_hand, dealer_hand, player_chips)
+        elif dealer_hand.value > player_hand.value:
+            dealer_wins(player_hand, dealer_hand, player_chips)
+        elif dealer_hand.value < player_hand.value:
+            player_wins(player_hand, dealer_hand, player_chips)
+        else:
+            push(player_hand, dealer_hand)
+        
+    print(f"\nPlayer Total Chips: {player_chips.total}")
+
+    new_game = input("Would you like to play another hand? y or n?")
+    
+    if new_game == 'y':
+        playing = True
+        continue
+    else:
+        print("Thank you for playing!")
+        break
